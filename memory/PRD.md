@@ -56,6 +56,24 @@ serves both APIs and its static UI). Repo cloned from
 - [x] Mounted Emergent LLM relay (`/emergent-llm/v1/*`) + seeded
       model endpoint.
 - [x] Verified login, model endpoint listing, and live LLM round-trip.
+- [x] **Brand rename**: every user-facing "Odysseus" wordmark replaced
+      with "Sophie's · Odysseus" (login title, sidebar brand, welcome
+      screen, chat header, page titles, manifest/PWA name, landing
+      hero & footer, chat role badge, message placeholder). Internal
+      identifiers (env vars, file paths, log strings, DB columns,
+      preset names, tour copy) left intact for stability.
+- [x] **Author credit**: "© AIKO | AIKOV //Sophie-x · founded & created"
+      added to the login footer, welcome screen subtitle, and landing
+      footer.
+- [x] **Permanent owner user** (`amarax.tm@gmail.com`) seeded with
+      `is_admin: true`, `is_owner: true`, `must_change_password: true`.
+      Idempotent — never overwrites an existing record.
+- [x] **Force-password-change flow**: backend sets the flag on seed;
+      `change_password()` clears it on success; login response,
+      auth status, and the login page UI surface the flag and present
+      a mandatory password-change card before letting the user in.
+      `init.js` also redirects back to `/login` if a cookie-bearing
+      user somehow lands on `/` with the flag still set.
 
 ## Backlog / Next Action Items
 - P1: Wire up local LLM hosts (Ollama / vLLM / llama.cpp) from inside

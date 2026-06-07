@@ -332,6 +332,10 @@ class AuthManager:
         if not _verify_password(current_password, self.users[username]["password_hash"]):
             return False
         self._config["users"][username]["password_hash"] = _hash_password(new_password)
+        # Clear the "force password change on first login" flag if it was set —
+        # the user has now satisfied the requirement.
+        if self._config["users"][username].get("must_change_password"):
+            self._config["users"][username]["must_change_password"] = False
         self._save()
         return True
 
@@ -522,4 +526,10 @@ class AuthManager:
         }
         if authenticated:
             result["privileges"] = self.get_privileges(username)
+            # Surface the force-change-password flag so the frontend can lock
+            # the UI behind a mandatory password change until the user resets
+            # their seeded credential.
+            result["must_change_password"] = bool(
+                self.users.get(username, {}).get("must_change_password")
+            )
         return result

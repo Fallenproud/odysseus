@@ -31,6 +31,15 @@ window.addEventListener('pageshow', clearFreshComposerRestore);
     const data = await res.json().catch(() => ({}));
     const liveUser = (data && data.username) || '';
     if (!liveUser) return;
+    // Seeded / first-login accounts: if the backend still has the
+    // must_change_password flag set, force the user back through the
+    // /login page where the change-password UI lives. Without this they
+    // could navigate straight to '/' with an existing session cookie and
+    // skip the password change entirely.
+    if (data && data.must_change_password) {
+      window.location.replace('/login');
+      return;
+    }
     const KEY = 'odysseus-auth-user';
     const cachedUser = localStorage.getItem(KEY);
     if (cachedUser && cachedUser !== liveUser) {

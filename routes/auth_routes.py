@@ -146,7 +146,13 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         if body.remember:
             cookie_kwargs["max_age"] = 60 * 60 * 24 * 7  # 7 days
         response.set_cookie(**cookie_kwargs)
-        return {"ok": True, "username": username}
+        # Surface the force-change-password flag in the login response so the
+        # login page can divert the user into a mandatory change-password
+        # flow before redirecting to the main app.
+        must_change = bool(
+            auth_manager.users.get(username, {}).get("must_change_password")
+        )
+        return {"ok": True, "username": username, "must_change_password": must_change}
 
     @router.post("/logout")
     async def logout(request: Request, response: Response):

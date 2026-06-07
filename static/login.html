@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
-<title>Odysseus — Login</title>
+<title>Sophie's · Odysseus — Login</title>
 <script nonce="{{CSP_NONCE}}">
 (function(){
   // Per-theme bg-effect defaults — mirrors THEME_DEFAULT_* maps in
@@ -250,7 +250,7 @@
 <body>
 <main class="card">
   <h1 class="logo">
-    <svg class="logo-boat" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 4L16 22L6 22Z" fill="currentColor"/><path d="M16 8L16 22L24 22Z" fill="currentColor" opacity="0.6"/><path d="M4 24Q10 20 16 24Q22 28 28 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><span>Odysseus</span>
+    <svg class="logo-boat" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 4L16 22L6 22Z" fill="currentColor"/><path d="M16 8L16 22L24 22Z" fill="currentColor" opacity="0.6"/><path d="M4 24Q10 20 16 24Q22 28 28 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><span>Sophie's · Odysseus</span>
   </h1>
   <p class="setup-note" id="setupNote" style="display:none"></p>
 
@@ -294,6 +294,7 @@
 </main>
 
 <footer class="version-label" id="version-label"></footer>
+<footer style="position:fixed;bottom:12px;left:16px;font-size:0.7rem;opacity:0.35;font-family:'Fira Code',monospace;pointer-events:none;user-select:none;letter-spacing:0.02em;">&copy; AIKO | AIKOV //Sophie-x &middot; founded &amp; created</footer>
 
 <script nonce="{{CSP_NONCE}}">
 (async () => {
@@ -362,6 +363,13 @@
     const res = await fetch('/api/auth/status', { credentials: 'same-origin' });
     const data = await res.json();
     if (data.authenticated) {
+      if (data.must_change_password) {
+        // Re-entry via existing session cookie — force the user through
+        // the change-password flow before letting them into the app.
+        setMode('login');
+        showForceChangePasswordUI('');
+        return;
+      }
       window.location.replace('/');
       return;
     }
@@ -501,6 +509,14 @@
         submitBtn.textContent = 'Verify';
         return;
       }
+      // Force password change on first login for seeded accounts (e.g. the
+      // permanent owner). The user is already authenticated at this point
+      // (the session cookie is set), but we block the redirect to `/` until
+      // they've replaced the temporary password.
+      if (data.must_change_password) {
+        showForceChangePasswordUI(password);
+        return;
+      }
       finishLogin();
     } catch (err) {
       errEl.textContent = err.message;
@@ -509,6 +525,78 @@
       return;
     }
   });
+
+  // ------------------------------------------------------------------
+  // Forced password change (seeded / first-login accounts)
+  // ------------------------------------------------------------------
+  function showForceChangePasswordUI(currentPassword) {
+    // Replace the card body so the user can't dismiss this. The session
+    // cookie is set, but we route them through change-password before
+    // letting them into the app.
+    const card = document.querySelector('.card');
+    if (!card) return;
+    // If we already know the current password (just-completed login),
+    // hide that input; otherwise ask for it.
+    const hasCurrent = !!currentPassword;
+    const currentField = hasCurrent
+      ? ''
+      : '\n        <label for="fc-current">Current password</label>\n        <div class="pw-wrapper">\n          <input id="fc-current" type="password" required autocomplete="current-password" data-testid="force-change-current">\n        </div>';
+    card.innerHTML = '\n      <h1 class="logo">\n        <svg class="logo-boat" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 4L16 22L6 22Z" fill="currentColor"/><path d="M16 8L16 22L24 22Z" fill="currentColor" opacity="0.6"/><path d="M4 24Q10 20 16 24Q22 28 28 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><span>Sophie\'s · Odysseus</span>\n      </h1>\n      <p class="setup-note" style="display:block;">Welcome. Please set a new password before continuing.</p>\n      <div class="error" id="fc-error" role="alert" aria-live="assertive" style="display:none;"></div>\n      <form id="fcForm" autocomplete="off" data-testid="force-change-password-form">' + currentField + '\n        <label for="fc-new">New password</label>\n        <div class="pw-wrapper">\n          <input id="fc-new" type="password" required minlength="8" autocomplete="new-password" data-testid="force-change-new">\n        </div>\n        <label for="fc-confirm">Confirm new password</label>\n        <div class="pw-wrapper">\n          <input id="fc-confirm" type="password" required minlength="8" autocomplete="new-password" data-testid="force-change-confirm">\n        </div>\n        <button type="submit" id="fc-submit" data-testid="force-change-submit">Update Password</button>\n      </form>\n    ';
+
+    const fcForm = document.getElementById('fcForm');
+    const fcErr  = document.getElementById('fc-error');
+    const fcSub  = document.getElementById('fc-submit');
+
+    fcForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      fcErr.style.display = 'none';
+      const cp = hasCurrent
+        ? currentPassword
+        : (document.getElementById('fc-current').value || '');
+      const np = document.getElementById('fc-new').value;
+      const cf = document.getElementById('fc-confirm').value;
+      if (!cp) {
+        fcErr.textContent = 'Current password is required';
+        fcErr.style.display = 'block';
+        return;
+      }
+      if (np.length < 8) {
+        fcErr.textContent = 'Password must be at least 8 characters';
+        fcErr.style.display = 'block';
+        return;
+      }
+      if (np !== cf) {
+        fcErr.textContent = 'Passwords do not match';
+        fcErr.style.display = 'block';
+        return;
+      }
+      if (np === cp) {
+        fcErr.textContent = 'New password must be different from the temporary one';
+        fcErr.style.display = 'block';
+        return;
+      }
+      fcSub.disabled = true;
+      fcSub.innerHTML = '<span class="login-spinner" aria-hidden="true"></span>';
+      try {
+        const res = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ current_password: cp, new_password: np })
+        });
+        const out = await res.json();
+        if (!res.ok) throw new Error(out.detail || 'Password change failed');
+        // change_password revokes other sessions; the current cookie is
+        // preserved by the backend so we can land straight in the app.
+        window.location.replace('/');
+      } catch (e) {
+        fcErr.textContent = e.message;
+        fcErr.style.display = 'block';
+        fcSub.disabled = false;
+        fcSub.textContent = 'Update Password';
+      }
+    });
+  }
 
   // Password show/hide toggles
   const eyeOpen = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';

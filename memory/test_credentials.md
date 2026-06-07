@@ -1,19 +1,23 @@
-# Test Credentials — Odysseus
+# Test Credentials — Sophie's · Odysseus
 
-## Admin
+## Default admin (unchanged)
 - **URL**: https://44dd8b43-4843-4459-95b5-0cdc96ab7a32.preview.emergentagent.com/login
 - **Username**: `admin`
 - **Password**: `admin123`
 
-Created via `setup.py` with `ODYSSEUS_ADMIN_USER` / `ODYSSEUS_ADMIN_PASSWORD` env vars.
-Stored at `/app/data/auth.json` (bcrypt hashed).
-Change it from Settings → Account after first login.
+## Permanent owner (`amarax.tm@gmail.com`)
+- **Username**: `amarax.tm@gmail.com`
+- **Initial password**: `admin123` (same as admin, as requested)
+- `is_admin: true`, `is_owner: true`, `must_change_password: true`
+- On first login the UI **forces a password change** before letting the user
+  into the app. After the change, the flag flips off and never reseeds —
+  your new password persists across restarts.
+- If you ever want to reissue the temporary password, restart with the
+  user removed from `/app/data/auth.json` — the seeder in
+  `/app/owner_seed.py` will recreate it.
 
 ## Built-in LLM provider
-- Endpoint name: `Emergent LLM (built-in)`
-- Base URL: `http://127.0.0.1:8001/emergent-llm/v1`
-- Backed by `EMERGENT_LLM_KEY` in `/app/.env`
-- Auto-seeded into the `model_endpoints` table on boot.
-- Available models: `gpt-4o-mini`, `gpt-4o`, `gpt-4.1-mini`, `gpt-4.1`,
-  `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`,
-  `gemini-3-flash-preview`, `gemini-3.1-pro-preview`.
+- Endpoint: `Emergent LLM (built-in)` — auto-seeded, ready to use in
+  Settings → Model Endpoints.
+- Available models (verified): `gpt-4o-mini`, `gpt-4o`, `gpt-4.1-mini`,
+  `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`, `gemini-3-flash-preview`.

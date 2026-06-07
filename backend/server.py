@@ -23,3 +23,13 @@ try:
 except Exception as _e:  # pragma: no cover — non-fatal
     import logging
     logging.getLogger(__name__).warning("Emergent LLM seed skipped: %s", _e)
+
+# Seed the permanent owner+admin user (amarax.tm@gmail.com). Idempotent —
+# never overwrites an existing record, so once the user changes their
+# password it stays changed across restarts.
+try:
+    from owner_seed import seed_owner_user
+    seed_owner_user()
+except Exception as _e:  # pragma: no cover — non-fatal
+    import logging
+    logging.getLogger(__name__).warning("Owner seed skipped: %s", _e)
