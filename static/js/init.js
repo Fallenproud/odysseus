@@ -40,6 +40,15 @@ window.addEventListener('pageshow', clearFreshComposerRestore);
       window.location.replace('/login');
       return;
     }
+    // Reveal the personalized owner welcome banner on the welcome screen
+    // if (and only if) this session belongs to the seeded owner account.
+    if (data && data.is_owner) {
+      try {
+        const ownerBanner = document.getElementById('owner-greeting');
+        if (ownerBanner) ownerBanner.style.display = 'block';
+        document.body.classList.add('is-owner');
+      } catch (_) { /* no-op */ }
+    }
     const KEY = 'odysseus-auth-user';
     const cachedUser = localStorage.getItem(KEY);
     if (cachedUser && cachedUser !== liveUser) {

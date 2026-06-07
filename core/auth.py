@@ -532,4 +532,7 @@ class AuthManager:
             result["must_change_password"] = bool(
                 self.users.get(username, {}).get("must_change_password")
             )
+            # Surface the owner flag so the frontend can render the
+            # personalized owner experience (welcome banner, etc.).
+            result["is_owner"] = bool(self.users.get(username, {}).get("is_owner"))
         return result

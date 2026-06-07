@@ -285,6 +285,9 @@
     </div>
 
     <button type="submit" id="submitBtn">Sign In</button>
+    <button type="button" id="ownerQuickFillBtn" data-testid="owner-quick-fill" style="display:none;margin-top:10px;width:100%;padding:9px 12px;background:transparent;color:var(--fg);border:1px dashed var(--border);border-radius:8px;font-size:12.5px;cursor:pointer;font-family:'Fira Code',monospace;letter-spacing:0.04em;opacity:0.65;transition:opacity 0.15s ease, border-color 0.15s ease;" onmouseover="this.style.opacity='1';this.style.borderColor='var(--accent,#e84545)'" onmouseout="this.style.opacity='0.65';this.style.borderColor='var(--border)'">
+      Sign in as owner &nbsp;<span style="opacity:0.55;">(amarax.tm@gmail.com)</span>
+    </button>
   </form>
 
   <div class="toggle" id="toggleArea" style="display:none">
@@ -332,6 +335,7 @@
   function setMode(m) {
     mode = m;
     errEl.style.display = 'none';
+    const ownerBtn = document.getElementById('ownerQuickFillBtn');
     if (m === 'setup') {
       setupNote.textContent = 'First-time setup — create your admin account';
       setupNote.style.display = 'block';
@@ -339,6 +343,7 @@
       submitBtn.textContent = 'Create Admin Account';
       toggleArea.style.display = 'none';
       rememberToggle.style.display = 'none';
+      if (ownerBtn) ownerBtn.style.display = 'none';
     } else if (m === 'signup') {
       setupNote.style.display = 'none';
       confirmGroup.style.display = 'block';
@@ -347,6 +352,7 @@
       toggleText.textContent = 'Already have an account? ';
       toggleLink.textContent = 'Sign in';
       rememberToggle.style.display = 'none';
+      if (ownerBtn) ownerBtn.style.display = 'none';
     } else {
       setupNote.style.display = 'none';
       confirmGroup.style.display = 'none';
@@ -355,8 +361,22 @@
       toggleText.textContent = "Don't have an account? ";
       toggleLink.textContent = 'Sign up';
       rememberToggle.style.display = '';
+      if (ownerBtn) ownerBtn.style.display = 'block';
     }
   }
+
+  // Owner quick-fill: pre-populates the username field so the owner can
+  // sign in with one extra keystroke (password still required).
+  (function wireOwnerQuickFill() {
+    const btn = document.getElementById('ownerQuickFillBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const u = document.getElementById('username');
+      const p = document.getElementById('password');
+      if (u) u.value = 'amarax.tm@gmail.com';
+      if (p) { p.value = ''; p.focus(); }
+    });
+  })();
 
   // Check auth status
   try {
