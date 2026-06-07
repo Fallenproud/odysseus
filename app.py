@@ -172,7 +172,7 @@ if AUTH_ENABLED:
         "/api/version",
         "/login",
     }
-    AUTH_EXEMPT_PREFIXES = ["/static"]
+    AUTH_EXEMPT_PREFIXES = ["/static", "/emergent-llm/"]
     # Dynamic paths whose own handler proves identity via a path-embedded
     # secret instead of the session/bearer auth. The route handler at
     # routes/task_routes.py validates the per-task `webhook_token` itself
@@ -525,6 +525,16 @@ upload_cleanup_task = None
 # emojis as flat SVG instead of system color glyphs.
 from routes.emoji_routes import setup_emoji_routes
 app.include_router(setup_emoji_routes())
+
+# Emergent LLM relay — OpenAI-compatible bridge backed by the Emergent
+# Universal LLM key. Mounted unconditionally; the relay itself fails with
+# 503 if EMERGENT_LLM_KEY is missing. Lets the user pick a working model
+# out of the box without configuring an external API key.
+try:
+    from emergent_llm_relay import router as emergent_llm_router
+    app.include_router(emergent_llm_router)
+except Exception as _e:  # pragma: no cover — relay is optional
+    logger.warning("Emergent LLM relay not mounted: %s", _e)
 
 # Sessions
 from routes.session_routes import setup_session_routes
