@@ -89,3 +89,9 @@ docs/windows-port/
 compound.config.json
 *.error.log
 _scratch/
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
